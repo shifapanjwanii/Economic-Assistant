@@ -167,18 +167,29 @@ class EconomicAgent:
         """
         Main agentic loop: Reason -> Act -> Observe -> Reflect
         """
-        # Retrieve user context from memory
-        user_profile = await self.memory_service.get_user_profile(user_id)
-        conversation_history = await self.memory_service.get_conversation_history(user_id, limit=5)
-        recent_decisions = await self.memory_service.get_recent_decisions(user_id, limit=3)
-        
-        # Build system prompt with memory context
-        system_prompt = self._build_system_prompt(user_profile, recent_decisions)
+        # Build system prompt with static guidance
+        system_prompt = self._build_base_system_prompt()
         
         # Build conversation messages
         messages = [
             {"role": "system", "content": system_prompt}
         ]
+        
+        # Retrieve user context from memory - FRESH EACH TIME
+        user_profile = await self.memory_service.get_user_profile(user_id)
+        conversation_history = await self.memory_service.get_conversation_history(user_id, limit=5)
+        
+        # Add user profile context as the first message after system prompt
+        if user_profile:
+            profile_context = self._build_user_context(user_profile)
+            messages.append({
+                "role": "user",
+                "content": profile_context
+            })
+            messages.append({
+                "role": "assistant",
+                "content": "I've noted your profile. Ready to help with your economic decisions."
+            })
         
         # Add recent conversation history
         for conv in conversation_history:
@@ -280,12 +291,58 @@ class EconomicAgent:
             "iterations": iteration
         }
     
+    def _build_base_system_prompt(self) -> str:
+        """Build base system prompt without user-specific context"""
+        return """You are an Economic Decision Advisor - an intelligent assistant that helps users make informed everyday economic and financial decisions using real-time macroeconomic data.
+
+Your role is to:
+1. REASON about the user's question and determine which data sources would be most helpful
+2. ACT by calling appropriate tools to gather economic data, news, or exchange rate information
+3. OBSERVE the data returned from tools and identify patterns or insights
+4. REFLECT by synthesizing all information into clear, actionable guidance
+
+Guidelines:
+- Use tools strategically to gather relevant economic data before making recommendations
+- Cite your data sources and their dates in your responses
+- Consider both current conditions and historical context
+- Be transparent about uncertainties and limitations
+- Avoid specific investment advice or stock picking
+- Focus on helping with everyday economic decisions (saving, spending, debt management)
+- Explain economic concepts in accessible language
+- Consider the user's personal context when providing guidance
+- IMPORTANT: Always tailor recommendations to the user's profile - their risk tolerance, debt level, and financial goals
+"""
+
+    def _build_user_context(self, user_profile: Dict[str, Any]) -> str:
+        """Build user context message that includes current profile info"""
+        context = "Here's my current financial profile:\n"
+        
+        if user_profile.get("income_range"):
+            context += f"- Income range: {user_profile['income_range']}\n"
+        
+        if user_profile.get("debt_level"):
+            context += f"- Current debt: ${user_profile['debt_level']:,.2f}\n"
+        
+        if user_profile.get("dependents"):
+            context += f"- Dependents: {user_profile['dependents']}\n"
+        
+        if user_profile.get("risk_tolerance"):
+            context += f"- Risk tolerance: {user_profile['risk_tolerance']}\n"
+        
+        if user_profile.get("financial_goals"):
+            goals = user_profile['financial_goals']
+            if goals and any(goals.values()):
+                goals_list = [str(v) for v in goals.values() if v]
+                context += f"- Financial goals: {', '.join(goals_list)}\n"
+        
+        return context
+
     def _build_system_prompt(
         self,
         user_profile: Optional[Dict[str, Any]],
         recent_decisions: List[Dict[str, Any]]
     ) -> str:
-        """Build system prompt with user context"""
+        """Build system prompt with user context - DEPRECATED: Use _build_base_system_prompt and _build_user_context instead"""
         base_prompt = """You are an Economic Decision Advisor - an intelligent assistant that helps users make informed everyday economic and financial decisions using real-time macroeconomic data.
 
 Your role is to:
