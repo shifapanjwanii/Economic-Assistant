@@ -1,0 +1,346 @@
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  background: #000000;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.dashboard-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.refresh-button {
+  padding: 10px 20px;
+  background: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.refresh-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 71, 87, 0.3);
+}
+
+.refresh-button:active {
+  transform: translateY(0);
+}
+
+/* Loading and Error States */
+.loading-spinner,
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: #0f0f0f;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.loading-spinner {
+  gap: 16px;
+}
+
+.loading-spinner p {
+  font-size: 16px;
+  color: #ff4757;
+  font-weight: 500;
+}
+
+.error-message {
+  gap: 16px;
+  color: #ff4757;
+}
+
+.error-message svg {
+  color: #ff4757;
+}
+
+.retry-button {
+  margin-top: 16px;
+  padding: 10px 20px;
+  background: #ff4757;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.retry-button:hover {
+  background: #ff3838;
+}
+
+/* Sections */
+.dashboard-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+/* Indicators Grid */
+.indicators-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.indicator-card {
+  background: #0f0f0f;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.indicator-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 16px rgba(255, 71, 87, 0.2);
+}
+
+.indicator-card.error {
+  background: rgba(255, 71, 87, 0.1);
+  border-left: 4px solid #ff4757;
+}
+
+.indicator-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: #ff4757;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.indicator-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #a0aec0;
+  margin: 0;
+}
+
+.indicator-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ff4757;
+  margin-bottom: 8px;
+}
+
+.indicator-date {
+  font-size: 12px;
+  color: #666666;
+}
+
+.error-text {
+  color: #ff4757;
+  font-size: 14px;
+}
+
+/* Exchange Rates Grid */
+.exchange-rates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.exchange-card {
+  background: #0f0f0f;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  transition: transform 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.exchange-card:hover {
+  transform: translateY(-4px);
+}
+
+.exchange-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: #ff4757;
+}
+
+.currency-code {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.exchange-rate {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.exchange-label {
+  font-size: 12px;
+  color: #666666;
+}
+
+/* News Feed */
+.news-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.news-card {
+  background: #0f0f0f;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border-left: 4px solid #ff4757;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.news-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 12px rgba(255, 71, 87, 0.2);
+}
+
+.news-source {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff4757;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.news-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 8px 0;
+}
+
+.news-description {
+  font-size: 14px;
+  color: #a0aec0;
+  margin: 12px 0;
+  line-height: 1.6;
+}
+
+.news-date {
+  font-size: 12px;
+  color: #666666;
+  margin: 12px 0;
+}
+
+.news-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #ff4757;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.news-link:hover {
+  color: #ff3838;
+  text-decoration: underline;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666666;
+  font-size: 16px;
+  background: #0f0f0f;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Footer */
+.dashboard-footer {
+  text-align: center;
+  color: #666666;
+  font-size: 12px;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Animation for loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 16px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .dashboard-header h1 {
+    font-size: 24px;
+  }
+
+  .indicators-grid,
+  .exchange-rates-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .indicator-value {
+    font-size: 24px;
+  }
+
+  .news-title {
+    font-size: 16px;
+  }
+}

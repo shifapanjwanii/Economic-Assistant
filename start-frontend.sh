@@ -16,4 +16,4 @@ echo "Frontend server starting on http://localhost:3000"
 echo "Press Ctrl+C to stop"
 echo ""
 
-npm start
+PORT=3000 npm start

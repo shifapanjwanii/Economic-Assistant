@@ -12,11 +12,15 @@ from models.schemas import (
 )
 from agent.economic_agent import EconomicAgent
 from services.memory_service import MemoryService
+from services.api_services import FREDService, NewsAPIService, ExchangeRateService
 
 
 # Initialize services
 memory_service = MemoryService()
 agent = EconomicAgent()
+fred_service = FREDService()
+news_service = NewsAPIService()
+exchange_rate_service = ExchangeRateService()
 
 
 @asynccontextmanager
@@ -149,6 +153,40 @@ async def clear_conversation_history(user_id: str):
     try:
         # This would need to be implemented in memory_service
         return {"message": "History cleared", "user_id": user_id}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/dashboard")
+async def get_dashboard_data():
+    """
+    Get aggregated dashboard data including economic indicators, news, and exchange rates
+    """
+    try:
+        # Fetch economic indicators in parallel
+        inflation = await fred_service.get_inflation_rate()
+        unemployment = await fred_service.get_unemployment_rate()
+        federal_funds = await fred_service.get_federal_funds_rate()
+        gdp = await fred_service.get_gdp_growth()
+        
+        # Fetch news
+        news = await news_service.get_economic_news(page_size=8)
+        
+        # Fetch exchange rates
+        exchange_rates = await exchange_rate_service.get_exchange_rates("USD")
+        
+        return {
+            "indicators": {
+                "inflation": inflation,
+                "unemployment": unemployment,
+                "federal_funds_rate": federal_funds,
+                "gdp": gdp
+            },
+            "news": news,
+            "exchange_rates": exchange_rates,
+            "timestamp": datetime.now().isoformat()
+        }
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
