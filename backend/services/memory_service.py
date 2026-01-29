@@ -231,3 +231,14 @@ class MemoryService:
                     }
                     for row in rows
                 ]
+    
+    async def clear_conversation_history(self, user_id: str) -> Dict[str, Any]:
+        """Clear all conversation history for a user"""
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute(
+                "DELETE FROM conversations WHERE user_id = ?",
+                (user_id,)
+            )
+            await db.commit()
+        
+        return {"success": True, "message": "Conversation history cleared"}

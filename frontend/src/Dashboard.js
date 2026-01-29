@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { TrendingUp, TrendingDown, DollarSign, Users, BarChart3, Globe, Loader, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Users, BarChart3, Globe, Loader, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -9,6 +10,9 @@ function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedCurrency, setExpandedCurrency] = useState(null);
+  const [historicalData, setHistoricalData] = useState({});
+  const [loadingChart, setLoadingChart] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -28,6 +32,39 @@ function Dashboard() {
       setError('Failed to load dashboard data. Please check that the backend is running.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistoricalData = async (currency) => {
+    if (historicalData[currency]) {
+      // Already have data for this currency
+      return;
+    }
+
+    setLoadingChart(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/exchange-rates/historical/${currency}`);
+      if (response.data.success) {
+        setHistoricalData(prev => ({
+          ...prev,
+          [currency]: response.data.historical_data
+        }));
+      }
+    } catch (err) {
+      console.error(`Failed to fetch historical data for ${currency}:`, err);
+    } finally {
+      setLoadingChart(false);
+    }
+  };
+
+  const handleCurrencyClick = async (currency) => {
+    if (expandedCurrency === currency) {
+      // Collapse if already expanded
+      setExpandedCurrency(null);
+    } else {
+      // Expand and fetch data if needed
+      setExpandedCurrency(currency);
+      await fetchHistoricalData(currency);
     }
   };
 
@@ -106,7 +143,7 @@ function Dashboard() {
         <h2 className="section-title">Economic Indicators</h2>
         <div className="indicators-grid">
           {renderIndicator(
-            'Inflation Rate (CPI)',
+            'Inflation Rate',
             indicators.inflation,
             <BarChart3 size={24} />,
             (v) => `${v.toFixed(2)}%`
@@ -137,17 +174,93 @@ function Dashboard() {
         <h2 className="section-title">USD Exchange Rates</h2>
         <div className="exchange-rates-grid">
           {majorCurrencies.map((currency) => (
-            <div key={currency} className="exchange-card">
-              <div className="exchange-header">
-                <Globe size={20} />
-                <span className="currency-code">{currency}</span>
+            <React.Fragment key={currency}>
+              <div className="exchange-card-wrapper">
+                <div 
+                  className={`exchange-card ${expandedCurrency === currency ? 'expanded' : ''}`}
+                  onClick={() => handleCurrencyClick(currency)}
+                >
+                  <div className="exchange-header">
+                    <Globe size={20} />
+                    <span className="currency-code">{currency}</span>
+                    {expandedCurrency === currency ? 
+                      <ChevronUp size={16} className="chevron-icon" /> : 
+                      <ChevronDown size={16} className="chevron-icon" />
+                    }
+                  </div>
+                  <div className="exchange-rate">
+                    {rates[currency]?.toFixed(4) || 'N/A'} {currency}
+                  </div>
+                  <div className="exchange-label">per USD</div>
+                </div>
               </div>
-              <div className="exchange-rate">
-                {rates[currency]?.toFixed(4) || 'N/A'} {currency}
-              </div>
-              <div className="exchange-label">per USD</div>
-            </div>
+            </React.Fragment>
           ))}
+          
+          {expandedCurrency && (
+            <div className="chart-dropdown">
+              {loadingChart ? (
+                <div className="chart-loading">
+                  <Loader size={24} className="animate-spin" />
+                  <p>Loading historical data...</p>
+                </div>
+              ) : historicalData[expandedCurrency] && historicalData[expandedCurrency].length > 0 ? (
+                <div className="chart-container">
+                  <h4 className="chart-title">{expandedCurrency}/USD Exchange Rate Trend (Past Year)</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={historicalData[expandedCurrency]} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="#666"
+                        tick={{ fill: '#999', fontSize: 12 }}
+                        tickFormatter={(date) => {
+                          const d = new Date(date);
+                          return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                        }}
+                      />
+                      <YAxis 
+                        stroke="#666"
+                        tick={{ fill: '#999', fontSize: 12 }}
+                        domain={['auto', 'auto']}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1a1a1a', 
+                          border: '1px solid #ff4757',
+                          borderRadius: '8px'
+                        }}
+                        labelStyle={{ color: '#fff' }}
+                        itemStyle={{ color: '#ff4757' }}
+                        formatter={(value) => [value.toFixed(4), `${expandedCurrency}`]}
+                        labelFormatter={(date) => {
+                          const d = new Date(date);
+                          return d.toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          });
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="rate" 
+                        stroke="#ff4757" 
+                        strokeWidth={2}
+                        dot={{ fill: '#ff4757', r: 3 }}
+                        activeDot={{ r: 5 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="chart-error">
+                  <AlertCircle size={24} />
+                  <p>No historical data available</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

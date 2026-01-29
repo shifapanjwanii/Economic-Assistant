@@ -167,16 +167,20 @@ class EconomicAgent:
         """
         Main agentic loop: Reason -> Act -> Observe -> Reflect
         """
-        # Build system prompt with static guidance
-        system_prompt = self._build_base_system_prompt()
+        # Retrieve user profile to get explanation depth preference
+        user_profile = await self.memory_service.get_user_profile(user_id)
+        explanation_depth = user_profile.get("preferences", {}).get("explanation_depth", "moderate") if user_profile else "moderate"
+        max_tokens = self._get_max_tokens_for_depth(explanation_depth)
+        
+        # Build system prompt with explanation depth guidance
+        system_prompt = self._build_base_system_prompt(explanation_depth)
         
         # Build conversation messages
         messages = [
             {"role": "system", "content": system_prompt}
         ]
         
-        # Retrieve user context from memory - FRESH EACH TIME
-        user_profile = await self.memory_service.get_user_profile(user_id)
+        # Retrieve conversation history from memory
         conversation_history = await self.memory_service.get_conversation_history(user_id, limit=5)
         
         # Add user profile context as the first message after system prompt
@@ -222,7 +226,7 @@ class EconomicAgent:
                 tools=self.tools,
                 tool_choice="auto",
                 temperature=config.LLM_TEMPERATURE,
-                max_tokens=config.MAX_TOKENS
+                max_tokens=max_tokens
             )
             
             assistant_message = response.choices[0].message
@@ -291,9 +295,9 @@ class EconomicAgent:
             "iterations": iteration
         }
     
-    def _build_base_system_prompt(self) -> str:
+    def _build_base_system_prompt(self, explanation_depth: str = "moderate") -> str:
         """Build base system prompt without user-specific context"""
-        return """You are an Economic Decision Advisor - an intelligent assistant that helps users make informed everyday economic and financial decisions using real-time macroeconomic data.
+        base_prompt = """You are Pulse - an intelligent assistant that helps users make informed everyday economic and financial decisions by reading between the rates using real-time macroeconomic data.
 
 Your role is to:
 1. REASON about the user's question and determine which data sources would be most helpful
@@ -312,6 +316,25 @@ Guidelines:
 - Consider the user's personal context when providing guidance
 - IMPORTANT: Always tailor recommendations to the user's profile - their risk tolerance, debt level, and financial goals
 """
+        
+        # Add explanation depth guidelines
+        if explanation_depth.lower() == "brief":
+            base_prompt += "\nRESPONSE STYLE: Provide concise, focused responses. Keep explanations brief and to the point. Use bullet points when helpful. Aim for clarity over detail."
+        elif explanation_depth.lower() == "detailed":
+            base_prompt += "\nRESPONSE STYLE: Provide comprehensive, in-depth responses. Include detailed explanations, examples, and context. Cover multiple perspectives and nuances."
+        else:  # moderate
+            base_prompt += "\nRESPONSE STYLE: Provide balanced responses with adequate detail. Include key explanations and examples without being overly verbose."
+        
+        return base_prompt
+
+    def _get_max_tokens_for_depth(self, explanation_depth: str) -> int:
+        """Return max tokens based on explanation depth preference"""
+        depth_tokens = {
+            "brief": 500,
+            "moderate": 1000,
+            "detailed": 2000
+        }
+        return depth_tokens.get(explanation_depth.lower(), 1000)
 
     def _build_user_context(self, user_profile: Dict[str, Any]) -> str:
         """Build user context message that includes current profile info"""
@@ -343,7 +366,7 @@ Guidelines:
         recent_decisions: List[Dict[str, Any]]
     ) -> str:
         """Build system prompt with user context - DEPRECATED: Use _build_base_system_prompt and _build_user_context instead"""
-        base_prompt = """You are an Economic Decision Advisor - an intelligent assistant that helps users make informed everyday economic and financial decisions using real-time macroeconomic data.
+        base_prompt = """You are Pulse - an intelligent assistant that helps users make informed everyday economic and financial decisions by reading between the rates using real-time macroeconomic data.
 
 Your role is to:
 1. REASON about the user's question and determine which data sources would be most helpful

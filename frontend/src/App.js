@@ -140,8 +140,8 @@ function App() {
         <div className="header-content">
           <TrendingUp size={32} className="header-icon" />
           <div>
-            <h1>Economic Decision Advisor</h1>
-            <p>AI-powered guidance for everyday economic decisions</p>
+            <h1>Pulse</h1>
+            <p>Read between the rates</p>
           </div>
         </div>
         
@@ -195,7 +195,7 @@ function App() {
           <div className="messages-container">
             {messages.length === 0 && (
               <div className="welcome-message">
-                <h2>Welcome to Economic Decision Advisor</h2>
+                <h2>Welcome to Pulse</h2>
                 <p>Ask me about inflation, interest rates, economic news, or get personalized financial guidance based on current macroeconomic conditions.</p>
                 
                 <div className="suggested-questions">
@@ -285,16 +285,14 @@ function App() {
               <Send size={20} />
             </button>
           </div>
+
+          <footer className="app-footer">
+            <p>
+              Data from FRED, NewsAPI, and Exchange Rate APIs
+            </p>
+          </footer>
         </div>
       )}
-
-      <footer className="app-footer">
-        <p>
-          Educational project demonstrating agentic AI with real economic data
-          <span className="separator">•</span>
-          Data from FRED, NewsAPI, and Exchange Rate APIs
-        </p>
-      </footer>
 
       <ProfileModal
         userId={userId}

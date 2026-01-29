@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="Economic Decision Advisor API",
+    title="Pulse API",
     description="Agentic AI system for economic decision-making",
     version="1.0.0",
     lifespan=lifespan
@@ -52,7 +52,7 @@ app.add_middleware(
 async def root():
     """Root endpoint"""
     return {
-        "message": "Economic Decision Advisor API",
+        "message": "Pulse API",
         "version": "1.0.0",
         "status": "running"
     }
@@ -148,11 +148,11 @@ async def get_conversation_history(user_id: str, limit: int = 20):
 @app.delete("/api/users/{user_id}/history")
 async def clear_conversation_history(user_id: str):
     """
-    Clear conversation history for a user (for testing/demo purposes)
+    Clear conversation history for a user
     """
     try:
-        # This would need to be implemented in memory_service
-        return {"message": "History cleared", "user_id": user_id}
+        result = await memory_service.clear_conversation_history(user_id)
+        return result
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -188,6 +188,28 @@ async def get_dashboard_data():
             "timestamp": datetime.now().isoformat()
         }
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/exchange-rates/historical/{currency}")
+async def get_historical_exchange_rates(currency: str, days: int = 365):
+    """
+    Get historical exchange rates for a specific currency from FRED
+    """
+    try:
+        historical_data = await fred_service.get_historical_exchange_rates(
+            currency=currency.upper(),
+            days=days
+        )
+        
+        if not historical_data.get("success"):
+            raise HTTPException(status_code=500, detail=historical_data.get("error", "Failed to fetch data"))
+        
+        return historical_data
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

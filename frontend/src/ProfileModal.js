@@ -165,47 +165,43 @@ function ProfileModal({ userId, isOpen, onClose, onSave }) {
             
             <label>
               Short-term (Next 3-6 months)
-              <input
-                type="text"
-                placeholder="e.g., Build emergency fund, Pay off credit card"
+              <select
                 value={profile.financial_goals.short_term}
                 onChange={(e) => setProfile({
                   ...profile,
                   financial_goals: { ...profile.financial_goals, short_term: e.target.value }
                 })}
-              />
+              >
+                <option value="">Select a goal</option>
+                <option value="emergency_fund">Build Emergency Fund</option>
+                <option value="pay_debt">Pay Off Debt</option>
+                <option value="save_travel">Save for Travel</option>
+                <option value="reduce_expenses">Reduce Expenses</option>
+                <option value="increase_income">Increase Income</option>
+                <option value="build_credit">Build Credit Score</option>
+                <option value="start_investing">Start Investing</option>
+              </select>
             </label>
 
             <label>
               Long-term (1+ years)
-              <input
-                type="text"
-                placeholder="e.g., Save for house, Retirement planning"
+              <select
                 value={profile.financial_goals.long_term}
                 onChange={(e) => setProfile({
                   ...profile,
                   financial_goals: { ...profile.financial_goals, long_term: e.target.value }
                 })}
-              />
+              >
+                <option value="">Select a goal</option>
+                <option value="buy_home">Buy a Home</option>
+                <option value="retirement">Retirement Planning</option>
+                <option value="education">Education Fund</option>
+                <option value="wealth_building">Wealth Building</option>
+                <option value="passive_income">Generate Passive Income</option>
+                <option value="pay_off_mortgage">Pay Off Mortgage</option>
+                <option value="financial_independence">Achieve Financial Independence</option>
+              </select>
             </label>
-          </div>
-
-          <div className="form-section">
-            <h3>Focus Areas</h3>
-            <p className="section-description">What economic factors matter most to you?</p>
-            
-            <div className="checkbox-group">
-              {['Inflation', 'Interest Rates', 'Employment', 'Housing Market', 'Investments', 'Debt Management'].map(area => (
-                <label key={area} className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={(profile.preferences.focus_areas || []).includes(area)}
-                    onChange={() => toggleFocusArea(area)}
-                  />
-                  {area}
-                </label>
-              ))}
-            </div>
           </div>
 
           <div className="form-section">
@@ -218,11 +214,12 @@ function ProfileModal({ userId, isOpen, onClose, onSave }) {
                   preferences: { ...profile.preferences, explanation_depth: e.target.value }
                 })}
               >
-                <option value="brief">Brief - Quick summaries</option>
-                <option value="moderate">Moderate - Balanced detail</option>
-                <option value="detailed">Detailed - In-depth explanations</option>
+                <option value="brief">Brief Summary - Quick, concise responses with key points</option>
+                <option value="moderate">Moderate - Balanced explanations with examples</option>
+                <option value="detailed">Detailed - Comprehensive explanations with full context and nuances</option>
               </select>
             </label>
+            <p className="form-hint">Choose how detailed you want Pulse's responses to be. Brief is great for quick answers, Moderate for everyday decisions, and Detailed for in-depth analysis.</p>
           </div>
 
           {message && (
