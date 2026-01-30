@@ -1,196 +1,423 @@
-# Economic Decision Advisor — An LLM-Based Agentic System
+# Pulse — An AI-Powered Economic Decision Assistant
 
 ## Project Overview
 
-The **Economic Decision Advisor** is an agentic AI application that empowers users to make better everyday economic and financial decisions by interpreting live macroeconomic data. Unlike traditional rule-based systems that follow fixed workflows, this agent uses a large language model (LLM) to *reason* about which tools to deploy and how to synthesize their outputs into coherent, actionable insights.
+**Pulse** is an intelligent agentic AI system that helps users make informed everyday economic and financial decisions by analyzing real-time macroeconomic data. Built with a React frontend and FastAPI backend, Pulse leverages large language models (LLMs) to autonomously reason about user queries, fetch relevant economic data, and provide personalized financial guidance.
 
-The core innovation lies in the agent's reasoning autonomy: rather than executing a predetermined decision tree, the LLM dynamically evaluates the user's query, determines which data sources are most relevant, orchestrates calls to multiple real-world APIs, and then reflects on the results to provide evidence-based guidance. This mirrors how human financial advisors reason—by gathering information, weighing trade-offs, and adapting their approach based on context.
+The system implements a complete **Reason-Act-Observe-Reflect** loop where the AI agent dynamically determines which data sources to query, orchestrates API calls, interprets results, and synthesizes evidence-based recommendations tailored to each user's financial profile and goals.
 
-## Core Agent Architecture
+## Core Features
 
-The Economic Decision Advisor follows a classic **agentic loop** consisting of four key phases:
+### 🤖 Agentic AI System
 
-### 1. **Reason**
-The agent receives a user query and uses the LLM to determine the most appropriate course of action. The LLM evaluates:
-- What the user is asking (problem decomposition)
-- Which external data sources would provide relevant insights
-- Whether additional information is needed before offering guidance
-- How past decisions or preferences (from long-term memory) might inform the current response
+Pulse implements an autonomous agent architecture with four key phases:
 
-### 2. **Act**
-Based on its reasoning, the agent *decides* which MCP (Model Context Protocol) tools to invoke and in what sequence. The agent may call:
-- One tool for a straightforward query
-- Multiple tools in parallel or sequence for complex scenarios
-- Zero tools if sufficient context already exists in long-term memory
+1. **Reason**: The LLM analyzes user queries to determine relevant data sources and information needs
+2. **Act**: The agent dynamically selects and invokes appropriate tools (FRED API, NewsAPI, Exchange Rates)
+3. **Observe**: Retrieved data is integrated and interpreted for patterns and insights
+4. **Reflect**: All observations are synthesized into coherent, personalized recommendations
 
-### 3. **Observe**
-The agent receives structured data responses from each tool call. These observations are then integrated into the agent's working context. The LLM interprets the data, identifies patterns, and checks for consistency or conflicts between different data sources.
+The agent iteratively loops through these phases until it can provide a comprehensive response, with transparency into which tools were used and how many reasoning iterations occurred.
 
-### 4. **Reflect**
-The agent synthesizes all observations into a coherent response, considering:
-- How the data answers the user's original question
-- Confidence levels and data limitations
-- Relevant caveats or alternative interpretations
-- How this interaction should inform future reasoning (memory update)
+### 📊 Real-Time Economic Dashboard
 
-This loop continues iteratively until the agent is confident it can provide a high-quality response. The loop is transparent to the user—they see the final synthesis, but the reasoning and tool orchestration occur beneath the surface.
+Interactive dashboard displaying:
+- **Key Economic Indicators**: Real-time data on inflation (CPI), unemployment rate, Federal Funds Rate, and GDP growth from FRED
+- **Economic News Feed**: Latest financial news articles relevant to current economic conditions
+- **Exchange Rates**: Live currency exchange rates with historical trend charts
+- **Historical Visualizations**: Interactive line charts showing currency trends over the past year (365 days)
+- **Auto-refresh**: Data updates every 5 minutes to stay current
 
-## MCP Tools (Real External APIs)
+### 💬 Conversational Chat Interface
 
-The agent integrates with three primary data sources, each serving a distinct purpose in economic reasoning:
+- **Natural language queries**: Ask questions in plain English about economic conditions and personal finance decisions
+- **Persistent conversation history**: All interactions are saved and retrievable
+- **Real-time typing indicators**: Visual feedback during agent processing
+- **Tool usage transparency**: See which data sources the agent consulted for each response
+- **Markdown rendering**: Rich text formatting for clear, readable responses
+- **Message timestamps**: Track when each interaction occurred
+- **Clear history option**: Ability to wipe conversation history and start fresh
+
+### 👤 User Profile & Personalization
+
+Comprehensive user profiles that enable personalized guidance:
+
+**Financial Context:**
+- Annual income range
+- Current debt level
+- Number of dependents
+- Risk tolerance (conservative, moderate, aggressive)
+
+**Goals Tracking:**
+- Short-term goals (emergency fund, debt payoff, travel savings, etc.)
+- Long-term goals (home purchase, retirement, education fund, wealth building, etc.)
+
+**Preferences:**
+- **Explanation Depth**: Choose between brief, moderate, or detailed responses
+- **Focus Areas**: Select topics of interest (inflation, interest rates, employment, housing market, debt management, retirement, currency/exchange rates)
+
+The agent uses this profile to:
+- Tailor recommendations to your specific situation
+- Adjust response verbosity based on preferences
+- Prioritize relevant data sources
+- Maintain context across conversations
+
+### 🧠 Long-Term Memory System
+
+SQLite-based memory storage that persists:
+- **User Profiles**: Complete financial context and preferences
+- **Conversation History**: Full record of all user queries and agent responses
+- **Decision Logs**: Track of recommendations and whether users acted on them
+- **Tools Used**: Record of which data sources were consulted for each query
+
+Memory enables the agent to:
+- Remember previous interactions and build continuity
+- Reference past advice and avoid repetition
+- Detect changes in user circumstances
+- Provide increasingly personalized guidance over time
+
+## Data Sources & Tools
+
+The agent integrates three primary external data sources, each accessible via dedicated tool functions:
 
 ### 1. Federal Reserve Economic Data (FRED) API
 
-**What it provides:**  
-Direct access to thousands of macroeconomic time series maintained by the U.S. Federal Reserve, including inflation rates (CPI), unemployment figures, interest rates, GDP growth, and sectoral economic indicators.
+**Available Tools:**
+- `get_inflation_data()`: Current CPI inflation rate (year-over-year percentage change)
+- `get_unemployment_rate()`: Current U.S. unemployment rate
+- `get_interest_rates()`: Current Federal Funds Rate
+- `get_gdp_growth()`: Real GDP growth rate (adjusted for inflation)
+- `get_historical_exchange_rates(currency, days)`: Historical currency data for trend analysis
 
-**Why it's valuable:**  
-FRED data is authoritative, regularly updated, and widely used by economists and policymakers. It provides the ground truth for macroeconomic conditions that directly affect personal financial decisions.
+**Why It's Valuable:**  
+FRED provides authoritative, regularly updated macroeconomic data from the U.S. Federal Reserve. This data directly affects personal financial decisions around saving, borrowing, and spending.
 
-**How the agent uses it:**  
-When a user asks, "Is now a good time to save or pay down debt?", the agent queries FRED to retrieve current inflation and real interest rates. High inflation may justify paying down debt faster, while high real interest rates favor saving. The agent can also compare historical data to assess whether current conditions are unusual, adding context to its recommendations.
+**Example Use Cases:**
+- "Is now a good time to save or pay down debt?" → Agent fetches real interest rates and inflation
+- "How has the economy changed in the last year?" → Agent pulls historical GDP and unemployment data
 
 ### 2. Financial News API (NewsAPI)
 
-**What it provides:**  
-Real-time aggregation of economic and financial news headlines from hundreds of reputable sources, tagged by topic and sentiment.
+**Available Tools:**
+- `get_economic_news(query)`: Real-time economic and financial news headlines
 
-**Why it's valuable:**  
-News captures market sentiment, emerging risks, and policy announcements that are not yet fully reflected in historical time series. It provides narrative context and alerts the agent to sudden shifts in economic conditions.
+**Why It's Valuable:**  
+News captures market sentiment, policy announcements, and emerging economic risks not yet reflected in historical data. Provides narrative context for economic trends.
 
-**How the agent uses it:**  
-When a user asks, "What recent economic news should influence my spending decisions?", the agent retrieves recent headlines on inflation, employment, interest rates, or sectoral trends. The agent weighs the sentiment and credibility of sources to highlight the most consequential developments. This ensures users are aware of emerging factors that may alter their financial outlook.
+**Example Use Cases:**
+- "What recent economic news should influence my spending?" → Agent retrieves headlines on inflation, employment, Fed policy
+- "Is there anything I should know about the job market?" → Agent searches for employment-related news
 
 ### 3. Currency & Exchange Rate API
 
-**What it provides:**  
-Real-time currency exchange rates, purchasing power parity indices, and cross-border cost-of-living comparisons.
+**Available Tools:**
+- `get_exchange_rates(base_currency)`: Current exchange rates for all major currencies
+- `compare_purchasing_power(amount, from_currency, to_currency)`: Compare purchasing power across currencies
 
-**Why it's valuable:**  
-Exchange rates and purchasing power directly affect the real value of savings, the cost of imports, and the returns on international investments. This API contextualizes personal finances within a global economic frame.
+**Why It's Valuable:**  
+Exchange rates affect the real value of savings, import costs, and international investments. Essential for understanding purchasing power in a global context.
 
-**How the agent uses it:**  
-When a user asks, "How does current inflation affect my purchasing power?", the agent may compare purchasing power across different currencies or time periods. If a user is considering international spending or has investments abroad, the agent uses exchange data to model real purchasing power, not just nominal amounts. This tool also helps the agent explain inflation's real-world impact on everyday purchases.
+**Example Use Cases:**
+- "How does inflation affect my purchasing power?" → Agent compares currency values and inflation impact
+- "Should I exchange currency now or wait?" → Agent analyzes current rates and recent trends
 
-## Long-Term Memory
+## API Endpoints
 
-The agent is designed to *learn* from interactions and maintain a persistent understanding of each user's context, preferences, and goals.
+The FastAPI backend provides the following REST endpoints:
 
-### What Gets Stored
+### Chat & Agent
+- `POST /api/chat` - Process user query through the economic agent
+  - Request: `{ "user_id": string, "message": string }`
+  - Response: `{ "response": string, "tools_used": string[], "iterations": int, "timestamp": string }`
 
-Long-term memory captures:
+### User Profile
+- `GET /api/users/{user_id}/profile` - Retrieve user profile
+- `POST /api/users/{user_id}/profile` - Create or update user profile
 
-- **User Profile**: Basic financial situation (income range, debt level, dependents)
-- **Risk Tolerance**: Inferred from past responses and explicit preferences (conservative, moderate, aggressive)
-- **Financial Goals**: Short-term (next 3 months) and long-term (retirement, major purchase)
-- **Past Decisions**: A log of previous queries, agent recommendations, and whether the user acted on them
-- **Preferences**: Which data sources the user trusts most, preferred explanation depth, any domains to avoid (e.g., stock picking)
+### Conversation History
+- `GET /api/users/{user_id}/history?limit={n}` - Get conversation history
+- `DELETE /api/users/{user_id}/history` - Clear conversation history
 
-### Memory Architecture
+### Dashboard Data
+- `GET /api/dashboard` - Get aggregated economic indicators, news, and exchange rates
+- `GET /api/exchange-rates/historical/{currency}?days={n}` - Get historical exchange rate data
 
-Memory is stored in a structured format (e.g., JSON or lightweight SQLite database) that allows the agent to:
-1. **Retrieve** relevant context quickly when processing new queries
-2. **Update** memory as new information emerges (e.g., user shares they got a raise, or inflation news shifts their concerns)
-3. **Reflect** on past patterns to identify inconsistencies or evolving preferences
+### Health & Status
+- `GET /` - Root endpoint with API info
+- `GET /health` - Health check with timestamp
 
-### How It Influences Reasoning
+## Technology Stack
 
-Each time the agent receives a query, it retrieves the user's profile and recent decision history. This context informs:
-- **Tone & Detail**: If the user previously opted for simple explanations, the agent adjusts verbosity
-- **Relevance**: The agent prioritizes tools and data relevant to known goals (e.g., retirement saving)
-- **Consistency**: The agent can flag if a new query conflicts with stated goals or past decisions, prompting reflection
-- **Personalization**: The agent avoids repeating advice it previously gave unless circumstances have changed
+### Backend
+- **Framework**: FastAPI (Python) - Modern, fast web framework for building APIs
+- **LLM Integration**: OpenAI GPT-4/GPT-4o via AsyncOpenAI client (compatible with OpenRouter)
+- **Database**: SQLite with aiosqlite for async operations
+- **Data Validation**: Pydantic models for request/response schemas
+- **HTTP Client**: httpx for async API calls to external services
+- **CORS**: Configured for local development (React frontend at localhost:3000)
 
-This creates a *relationship* between user and agent, where each interaction builds a richer model of the user's economic context and values.
+### Frontend
+- **Framework**: React 18 with functional components and hooks
+- **HTTP Client**: Axios for API communication
+- **Markdown Rendering**: react-markdown for rich text responses
+- **Charts**: Recharts for interactive data visualizations
+- **Icons**: Lucide React icon library
+- **Styling**: Custom CSS with responsive design
 
-## User Interface
+### Data Sources
+- **FRED API**: Federal Reserve Economic Data
+- **NewsAPI**: Financial news aggregation
+- **Exchange Rate API**: Real-time currency data
 
-The Economic Decision Advisor communicates through a **simple, conversational chat interface** available on web or desktop platforms. The UI serves as a communication layer, not the locus of intelligence.
+### Development Tools
+- **Package Management**: npm (frontend), pip (backend)
+- **Shell Scripts**: Automated setup and startup scripts
+- **Environment Variables**: `.env` file for API keys and configuration
 
-### Interface Design Principles
+## Project Structure
 
-- **Accessibility**: Users can ask questions in natural language, just as they would with a financial advisor
-- **Transparency**: When the agent calls tools, it briefly indicates which data it's fetching (e.g., "Checking current inflation data from FRED...")
-- **Traceability**: The response includes citations to data sources (e.g., "Based on FRED inflation data as of [date]...") and hyperlinks to relevant news articles
-- **Context Preservation**: Conversation history remains visible, allowing users to revisit reasoning and refine follow-up questions
-- **Memory Acknowledgment**: Occasionally, the agent reminds users of remembered context (e.g., "Given your focus on debt reduction, here's what the latest interest rates mean for you")
+```
+Economic-Assistant/
+├── backend/
+│   ├── main.py                 # FastAPI application & endpoints
+│   ├── config.py              # Configuration & environment variables
+│   ├── requirements.txt       # Python dependencies
+│   ├── agent/
+│   │   ├── economic_agent.py  # Core agentic loop implementation
+│   ├── services/
+│   │   ├── api_services.py    # FRED, NewsAPI, Exchange Rate services
+│   │   ├── memory_service.py  # SQLite-based memory management
+│   ├── models/
+│   │   ├── schemas.py         # Pydantic data models
+│   └── data/
+│       └── memory.db          # SQLite database (auto-created)
+├── frontend/
+│   ├── src/
+│   │   ├── App.js             # Main chat interface
+│   │   ├── Dashboard.js       # Economic dashboard view
+│   │   ├── ProfileModal.js    # User profile editor
+│   │   ├── index.js           # React entry point
+│   │   └── *.css              # Component styles
+│   ├── public/
+│   ├── package.json           # Node dependencies
+│   └── build/                 # Production build output
+├── setup.sh                   # Automated setup script
+├── start-backend.sh          # Backend startup script
+├── start-frontend.sh         # Frontend startup script
+├── .env                      # Environment variables (create from .env.example)
+├── README.md                 # This file
+└── SETUP.md                  # Installation instructions
+```
 
-The UI does *not* make decisions, run models, or orchestrate tools; it is purely a conduit for user input and agent output. All reasoning, tool selection, and memory management occur in the backend agent system.
+## Getting Started
 
-## Example Agent Interactions
+### Prerequisites
+- Python 3.8+
+- Node.js 14+ and npm
+- API Keys:
+  - OpenAI API key (or OpenRouter API key)
+  - FRED API key (free at https://fred.stlouisfed.org/docs/api/api_key.html)
+  - NewsAPI key (free at https://newsapi.org/register)
+  - Exchange Rate API key
 
-Below are realistic scenarios illustrating how the agent reasons and acts:
+### Installation
 
-### Scenario 1: Debt vs. Savings Decision
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Economic-Assistant
+   ```
 
+2. **Configure environment variables**
+   - Copy `.env.example` to `.env` (if available) or create `.env` file
+   - Add your API keys:
+     ```
+     OPENAI_API_KEY=your_openai_key
+     FRED_API_KEY=your_fred_key
+     NEWS_API_KEY=your_news_api_key
+     EXCHANGE_RATE_API_KEY=your_exchange_rate_key
+     ```
+
+3. **Run automated setup**
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+
+   This script will:
+   - Install Python dependencies
+   - Install Node.js dependencies
+   - Initialize the SQLite database
+   - Verify configuration
+
+### Running the Application
+
+**Option 1: Using startup scripts**
+```bash
+# Terminal 1 - Backend
+./start-backend.sh
+
+# Terminal 2 - Frontend
+./start-frontend.sh
+```
+
+**Option 2: Manual startup**
+```bash
+# Terminal 1 - Backend
+cd backend
+python main.py
+
+# Terminal 2 - Frontend
+cd frontend
+npm start
+```
+
+The application will be available at:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs (interactive Swagger UI)
+
+### First Steps
+
+1. Open http://localhost:3000 in your browser
+2. Click the profile icon to set up your financial profile
+3. Start chatting with Pulse about economic decisions
+4. Switch to the Dashboard tab to view real-time economic indicators
+
+## Example Use Cases
+
+### 1. Debt vs. Savings Decision
 **User**: "Is now a good time to prioritize saving or paying down debt?"
 
-**Agent Reasoning**:
-- Retrieves user profile (moderate risk tolerance, $50k in student loans, $15k emergency fund)
-- Decides to fetch real interest rates and inflation data from FRED
-- Calls the Currency/Exchange Rate API to check purchasing power trends
-- Reviews recent financial news for policy signals
+**What Pulse Does**:
+- Retrieves your financial profile (debt level, risk tolerance, goals)
+- Fetches current interest rates and inflation from FRED
+- Analyzes real interest rate (nominal rate minus inflation)
+- Compares your debt interest rate against potential savings returns
+- Provides personalized recommendation based on your specific situation
 
-**Agent Response**:
-"Given current conditions, paying down debt makes sense for you. Here's why: Real interest rates are positive (3.2% nominal minus 2.8% inflation), meaning the 'true cost' of your debt is substantial. Your emergency fund is adequate, so after-tax savings could meaningfully reduce interest paid on your loans. However, watch for [recent Fed news]. If inflation cools further, savings might become more attractive. I'd suggest redirecting [X]% of monthly surplus to debt for the next six months, then revisiting as conditions evolve."
-
-### Scenario 2: Inflation's Personal Impact
-
+### 2. Understanding Inflation Impact
 **User**: "How does current inflation affect my purchasing power?"
 
-**Agent Reasoning**:
-- Retrieves inflation rate from FRED
-- Uses exchange rate data to compare purchasing power in different markets
-- Checks user memory: has noted concerns about rising rent and groceries
-- Queries financial news for sector-specific inflation trends
+**What Pulse Does**:
+- Gets latest inflation data from FRED
+- Reviews your focus areas from profile (e.g., housing, groceries)
+- Searches for sector-specific inflation news
+- Calculates real purchasing power change
+- Explains practical impact on your budget categories
 
-**Agent Response**:
-"Overall inflation is 3.1% year-over-year, but *you're* likely experiencing faster inflation in the categories you care about. Groceries are up 4.2% and rental markets 5.8% in your region. This means your $100,000 salary effectively buys [X]% less than a year ago, specifically in housing and food. One option: shift discretionary spending to categories with lower inflation, or consider the timing of major purchases (e.g., buying durable goods now before further price rises). Want me to model specific scenarios?"
+### 3. Economic News Briefing
+**User**: "What recent economic news should I know about?"
 
-### Scenario 3: Economic News & Spending Decisions
+**What Pulse Does**:
+- Queries NewsAPI for latest financial headlines
+- Filters news based on your profile focus areas
+- Cross-references news with FRED data for context
+- Summarizes most relevant developments
+- Explains implications for your financial decisions
 
-**User**: "What recent economic news should influence my spending decisions?"
+### 4. Currency and Travel Planning
+**User**: "Should I exchange currency now or wait for my trip next month?"
 
-**Agent Reasoning**:
-- Queries NewsAPI for recent headlines on employment, inflation, and consumer sectors
-- Filters by relevance to user's stored goals and profile
-- Cross-references with FRED data to validate sentiment
+**What Pulse Does**:
+- Fetches current exchange rates
+- Retrieves historical trend data (charts on dashboard)
+- Analyzes recent currency volatility
+- Considers economic news affecting exchange rates
+- Provides timing recommendation with rationale
 
-**Agent Response**:
-"Three stories matter to you this week: (1) The Fed signaled rates may hold steady—good news for mortgage refinancing if you're considering it. (2) Job growth slowed to [X%], suggesting potential income risk; consider boosting your emergency fund. (3) Tech layoffs are accelerating; if your income depends on that sector, this is a caution signal. I'd recommend deferring non-essential purchases for the next month while clarity emerges. Does your employment feel stable?"
+### 5. Personalized Economic Analysis
+**User**: "Given my situation, what economic indicators should I watch?"
 
-## Educational Purpose
+**What Pulse Does**:
+- Reviews your complete financial profile
+- Identifies most relevant economic metrics based on your goals
+- Explains why each indicator matters to you specifically
+- Sets context for ongoing monitoring
+- Suggests actions based on indicator changes
 
-This project is designed and built for **educational purposes** within a university course on agentic AI systems. It serves as a capstone demonstration of how LLM agents reason autonomously over real-world data to solve practical problems.
+## Configuration
 
-### Learning Objectives
+### Backend Configuration (config.py)
 
-1. **Agentic Reasoning**: Students understand how LLMs can be prompted to reason iteratively (Reason → Act → Observe → Reflect), rather than simply answering queries directly.
+The backend uses environment variables for configuration. Key settings include:
 
-2. **Tool Orchestration**: Students learn to design systems where an AI agent *decides* which tools to use, rather than executing a fixed decision tree. This requires designing clean tool interfaces and grounding the agent's reasoning in concrete, external data.
+```python
+# LLM Configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+LLM_MODEL = "gpt-4o"  # or "gpt-4"
+LLM_TEMPERATURE = 0.7
+LLM_PROVIDER = "openai"  # or "openrouter"
 
-3. **API Integration**: Students practice integrating multiple real-world APIs (FRED, NewsAPI, exchange rates) into a cohesive backend system, handling rate limiting, error states, and data heterogeneity.
+# API Keys
+FRED_API_KEY = os.getenv("FRED_API_KEY")
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+EXCHANGE_RATE_API_KEY = os.getenv("EXCHANGE_RATE_API_KEY")
 
-4. **Long-Term Memory**: Students explore how persistent context enables more personalized, adaptive agent behavior. This touches on database design, privacy considerations, and the challenge of maintaining consistency over time.
+# Database
+DATABASE_PATH = "./data/memory.db"
 
-5. **Prompt Engineering & LLM Control**: Students refine prompts to guide LLM behavior, define tool schemas that the LLM understands, and implement guardrails to prevent misuse (e.g., the agent avoiding specific investment advice).
+# Server
+BACKEND_PORT = 8000
+```
 
-6. **System Design**: Students grapple with the end-to-end architecture of an agentic system—from user interface design to backend reasoning to observability—and appreciate the gaps between research papers and production deployments.
+### Frontend Configuration
 
-## Tech Stack
+Update `REACT_APP_API_URL` in your environment or directly in the code if needed:
+```javascript
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+```
 
-The Economic Decision Advisor is built using modern, accessible technologies aligned with current industry practice:
+## Key Design Decisions
 
-- **LLM API**: OpenAI GPT-4 / GPT-4o (or compatible LLM API) for reasoning and response generation
-- **REST APIs**: 
-  - Federal Reserve Economic Data (FRED) API for macroeconomic data
-  - NewsAPI (or similar) for financial news aggregation
-  - Exchange rate API (e.g., Open Exchange Rates) for currency data
-- **Backend Framework**: Python with FastAPI or Node.js with Express for API server
-- **Storage**: SQLite or JSON-based persistence for long-term user memory
-- **Frontend Framework**: React or Vue.js for web-based chat interface (or desktop app using Electron)
-- **Orchestration**: Python-based agent loop with structured prompting and tool-calling libraries (e.g., LangChain, LlamaIndex, or custom implementation)
+### Agentic Architecture
+- **Autonomous Tool Selection**: The LLM dynamically chooses which APIs to call rather than following predefined rules
+- **Iterative Reasoning**: Agent loops up to 5 times to gather sufficient context before responding
+- **Tool Transparency**: Users see which data sources were consulted for each answer
 
-## Conclusion
+### Memory Management
+- **Conversation Persistence**: All chats saved to SQLite for continuity
+- **Profile-Driven Personalization**: Every response considers user's financial context
+- **Explanation Depth Preference**: Users control response verbosity (brief/moderate/detailed)
 
-The Economic Decision Advisor demonstrates that agentic AI is not science fiction—it is a practical, learnable approach to building intelligent systems that reason autonomously, integrate diverse information sources, and adapt to individual users over time. By combining an LLM's reasoning with real economic data, this project grounds abstract agentic concepts in a tangible, relatable domain. Through building and deploying this system, students gain hands-on experience with the core techniques reshaping AI development today.
+### User Experience
+- **Dual Interface**: Chat for conversations, Dashboard for data exploration
+- **Real-Time Updates**: Dashboard auto-refreshes economic indicators
+- **Interactive Visualizations**: Historical charts for deeper trend analysis
+- **Profile Management**: Easy-to-use modal for updating financial information
+
+## Limitations & Disclaimers
+
+⚠️ **Important**: Pulse is designed for educational purposes and general economic understanding. It is **NOT** a substitute for professional financial advice.
+
+**Current Limitations:**
+- Does not provide specific investment recommendations or stock picks
+- Economic data has inherent lag (GDP is quarterly, some indicators are monthly)
+- News sentiment analysis is based on headline availability, not deep analysis
+- Cannot access real-time market data or user-specific account information
+- Recommendations are generalized and may not account for all personal factors
+
+**Use Responsibly:**
+- Always verify important financial decisions with qualified professionals
+- Be aware that economic conditions can change rapidly
+- Consider multiple sources of information before making financial choices
+- Understand that past economic patterns don't guarantee future outcomes
+
+## Contributing
+
+This project welcomes contributions! Areas for improvement include:
+
+- **Additional Data Sources**: Integration with more economic APIs
+- **Enhanced Visualizations**: More chart types and data analysis features
+- **Mobile Responsiveness**: Better mobile UI/UX
+- **Advanced Memory**: Improved context tracking and decision logging
+- **Multi-User Support**: Authentication and user management
+- **Export Features**: Ability to export conversation history and insights
+- **Testing**: Comprehensive test coverage for backend and frontend
+
+## Acknowledgments
+
+- **FRED API**: Federal Reserve Bank of St. Louis for comprehensive economic data
+- **NewsAPI**: For real-time financial news aggregation
+- **OpenAI**: For GPT-4 LLM capabilities
+- **React & FastAPI Communities**: For excellent documentation and tools
